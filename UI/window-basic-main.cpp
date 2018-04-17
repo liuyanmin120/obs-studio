@@ -3220,7 +3220,11 @@ bool OBSBasic::ResetAudio()
 
 	struct obs_audio_info ai;
 	ai.samples_per_sec = config_get_uint(basicConfig, "Audio",
-			"SampleRate");
+		"SampleRate");
+	uint64_t speex = config_get_uint(App()->GlobalConfig(), "General", "Speex");
+	if (speex) {
+		ai.samples_per_sec = 16000;
+	}
 
 	const char *channelSetupStr = config_get_string(basicConfig,
 			"Audio", "ChannelSetup");

@@ -102,6 +102,12 @@ static const char *opus_getname(void *unused)
 	return obs_module_text("FFmpegOpus");
 }
 
+static const char *speex_getname(void *unused)
+{
+	UNUSED_PARAMETER(unused);
+	return obs_module_text("FFmpegSpeex");
+}
+
 static void enc_destroy(void *data)
 {
 	struct enc_encoder *enc = data;
@@ -264,6 +270,11 @@ static void *opus_create(obs_data_t *settings, obs_encoder_t *encoder)
 	return enc_create(settings, encoder, "libopus", "opus");
 }
 
+static void *speex_create(obs_data_t *settings, obs_encoder_t *encoder)
+{
+	return enc_create(settings, encoder, "libspeex", NULL);
+}
+
 static bool do_encode(struct enc_encoder *enc,
 		struct encoder_packet *packet, bool *received_packet)
 {
@@ -354,7 +365,7 @@ static bool enc_extra_data(void *data, uint8_t **extra_data, size_t *size)
 	struct enc_encoder *enc = data;
 
 	*extra_data = enc->context->extradata;
-	*size       = enc->context->extradata_size;
+	*size = enc->context->extradata_size;
 	return true;
 }
 
@@ -397,6 +408,21 @@ struct obs_encoder_info opus_encoder_info = {
 	.encode         = enc_encode,
 	.get_frame_size = enc_frame_size,
 	.get_defaults   = enc_defaults,
+	.get_properties = enc_properties,
+	.get_extra_data = enc_extra_data,
+	.get_audio_info = enc_audio_info
+};
+
+struct obs_encoder_info speex_encoder_info = {
+	.id = "ffmpeg_speex",
+	.type = OBS_ENCODER_AUDIO,
+	.codec = "speex",
+	.get_name = speex_getname,
+	.create = speex_create,
+	.destroy = enc_destroy,
+	.encode = enc_encode,
+	.get_frame_size = enc_frame_size,
+	.get_defaults = enc_defaults,
 	.get_properties = enc_properties,
 	.get_extra_data = enc_extra_data,
 	.get_audio_info = enc_audio_info

@@ -1453,6 +1453,10 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 		if (!codec) {
 			return false;
 		}
+		uint64_t speex = config_get_uint(App()->GlobalConfig(), "General", "Speex");
+		if (speex) {
+			codec = "speex";
+		}
 
 		if (strcmp(codec, "aac") == 0) {
 			streamAudioEnc = aacTrack[trackIndex - 1];
@@ -1461,6 +1465,9 @@ bool AdvancedOutput::StartStreaming(obs_service_t *service)
 			int audioBitrate = GetAudioBitrate(trackIndex - 1);
 			obs_data_t *settings = obs_data_create();
 			obs_data_set_int(settings, "bitrate", audioBitrate);
+			if (speex) {
+				obs_data_set_int(settings, "speex", 1);
+			}
 
 			streamAudioEnc = obs_audio_encoder_create(id,
 					"alt_audio_enc", nullptr,

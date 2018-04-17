@@ -31,6 +31,8 @@
 
 #define VIDEO_HEADER_SIZE 5
 
+int speex = 0;
+
 static inline double encoder_bitrate(obs_encoder_t *encoder)
 {
 	obs_data_t *settings = obs_encoder_get_settings(encoder);
@@ -63,6 +65,13 @@ static bool build_flv_meta_data(obs_output_t *context,
 	obs_encoder_t *aencoder = obs_output_get_audio_encoder(context, a_idx);
 	video_t       *video    = obs_encoder_video(vencoder);
 	audio_t       *audio    = obs_encoder_audio(aencoder);
+
+	if (aencoder) {
+		obs_data_t *settings = obs_encoder_get_settings(aencoder);
+		speex = obs_data_get_int(settings, "speex");
+		obs_data_release(settings);
+	}
+
 	char buf[4096];
 	char *enc = buf;
 	char *end = enc+sizeof(buf);
@@ -243,14 +252,25 @@ static void flv_audio(struct serializer *s, int32_t dts_offset,
 	last_time = time_ms;
 #endif
 
-	s_wb24(s, (uint32_t)packet->size + 2);
+	if (speex) {
+		s_wb24(s, (uint32_t)packet->size + 1);
+	}
+	else {
+		s_wb24(s, (uint32_t)packet->size + 2);
+	}
 	s_wb24(s, time_ms);
 	s_w8(s, (time_ms >> 24) & 0x7F);
 	s_wb24(s, 0);
 
 	/* these are the two extra bytes mentioned above */
-	s_w8(s, 0xaf);
-	s_w8(s, is_header ? 0 : 1);
+	if (speex) {
+		s_w8(s, 0xba);
+		//s_w8(s, is_header ? 0 : 1);
+	}
+	else {
+		s_w8(s, 0xaf);
+		s_w8(s, is_header ? 0 : 1);
+	}
 	s_write(s, packet->data, packet->size);
 
 	/* write tag size (starting byte doesn't count) */
